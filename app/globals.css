@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* ใช้ CSS แบบมาตรฐานแทน @apply ในช่วงแรกเพื่อป้องกัน Error */
+body {
+  background-color: #F1F5F9; /* สีพื้นหลังตามแบบร่าง */
+  color: #0f172a;
+  margin: 0;
+  padding: 0;
+}
+
+/* หากต้องการใช้ @apply ต้องมั่นใจว่าคลาสนั้นถูกนิยามไว้แล้ว */
+.card-container {
+  @apply bg-white rounded-[2rem] border border-slate-200 shadow-sm;
+}
