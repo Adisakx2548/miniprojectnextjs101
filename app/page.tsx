@@ -260,10 +260,35 @@ export default function InventorySystem() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Value" value={`฿${products.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString()}`} color="text-indigo-600" />
-              <StatCard title="Avg. Price" value={`฿${(products.reduce((acc, p) => acc + p.price, 0) / (products.length || 1)).toFixed(2)}`} color="text-emerald-500" />
-              <StatCard title="Total Units" value={products.reduce((acc, p) => acc + p.stock, 0)} color="text-slate-700" />
-              <StatCard title="Activities" value={activities.length} color="text-amber-500" />
+              {/* 1. Total Value: คำนวณมูลค่ารวมโดยแปลงค่าเป็น Number เสมอ */}
+              <StatCard 
+                title="Total Value" 
+                value={`฿${products.reduce((acc, p) => acc + (Number(p.price) * Number(p.stock)), 0).toLocaleString()}`} 
+                color="text-indigo-600" 
+              />
+
+              {/* 2. Avg. Price: ดัก Error NaN กรณีไม่มีสินค้า และแปลงเป็น Number ก่อนคำนวณ */}
+              <StatCard 
+                title="Avg. Price" 
+                value={`฿${(products.length > 0 
+                  ? (products.reduce((acc, p) => acc + Number(p.price), 0) / products.length) 
+                  : 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+                color="text-emerald-500" 
+              />
+
+              {/* 3. Total Units: รวมจำนวนชิ้นทั้งหมด */}
+              <StatCard 
+                title="Total Units" 
+                value={products.reduce((acc, p) => acc + Number(p.stock), 0).toLocaleString()} 
+                color="text-slate-700" 
+              />
+
+              {/* 4. Activities: แสดงจำนวนกิจกรรมทั้งหมด */}
+              <StatCard 
+                title="Activities" 
+                value={activities.length} 
+                color="text-amber-500" 
+              />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
