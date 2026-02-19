@@ -1,4 +1,4 @@
-import { openDb } from '@/lib/db';
+import db from '@/lib/db'; // นำเข้า pool การเชื่อมต่อที่เราสร้างไว้ใน lib/db.ts
 import { NextResponse } from 'next/server';
 
 /**
@@ -7,15 +7,15 @@ import { NextResponse } from 'next/server';
  */
 export async function GET() {
   try {
-    const db = await openDb();
+    // ใช้ db.query ของ Postgres แทน db.all ของ SQLite
+    // เรียงลำดับจากไอดีล่าสุด (ล่าสุดมาอันแรก)
+    const { rows } = await db.query('SELECT * FROM activities ORDER BY id DESC LIMIT 5');
     
-    // ดึงข้อมูลกิจกรรมล่าสุด เรียงตาม ID จากมากไปน้อย
-    const data = await db.all('SELECT * FROM activities ORDER BY id DESC LIMIT 5');
+    // ตรวจสอบข้อมูลใน Console
+    console.log("Fetched activities from Cloud:", rows);
     
-    // ตรวจสอบข้อมูลใน Terminal ของ VS Code
-    console.log("Fetched activities:", data);
-    
-    return NextResponse.json(data || []); 
+    // ส่งข้อมูลกลับเป็น JSON
+    return NextResponse.json(rows || []); 
   } catch (error: unknown) {
     // จัดการข้อผิดพลาดและส่งสถานะ 500
     console.error("GET Activities Error:", error);

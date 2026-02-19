@@ -1,4 +1,4 @@
-import { openDb } from '@/lib/db';
+import db from '@/lib/db'; // นำเข้า pool การเชื่อมต่อจาก lib/db.ts
 import { NextResponse } from 'next/server';
 
 /**
@@ -7,13 +7,11 @@ import { NextResponse } from 'next/server';
  */
 export async function GET() {
   try {
-    const db = await openDb();
-    // ดึงข้อมูลสินค้าเรียงตาม ID ใหม่ล่าสุด
-    const products = await db.all('SELECT * FROM products ORDER BY id DESC');
+    // ใน Postgres ข้อมูลจะอยู่ใน rows
+    const { rows } = await db.query('SELECT * FROM products ORDER BY id DESC');
     
-    return NextResponse.json(products || []);
+    return NextResponse.json(rows || []);
   } catch (error: unknown) {
-    // จัดการ Error และพิมพ์ลง Terminal
     console.error("GET Products Error:", error);
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
   }
@@ -26,17 +24,18 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const { name, stock, price } = await req.json();
-    const db = await openDb();
 
-    // เพิ่มสินค้าลงในตาราง products
-    const result = await db.run(
-      'INSERT INTO products (name, stock, price) VALUES (?, ?, ?)',
+    // 1. เพิ่มสินค้าและดึง ID ที่เพิ่งสร้างออกมาด้วย RETURNING id
+    const productResult = await db.query(
+      'INSERT INTO products (name, stock, price) VALUES ($1, $2, $3) RETURNING id',
       [name, stock, price]
     );
 
-    // บันทึกกิจกรรมการเพิ่มสินค้าลงในตาราง activities
-    await db.run(
-      'INSERT INTO activities (action, details) VALUES (?, ?)',
+    const newProductId = productResult.rows[0].id;
+
+    // 2. บันทึกกิจกรรมการเพิ่มสินค้า (สะกดชื่อ Action ให้ตรงกับที่หน้าบ้านใช้กรองสี)
+    await db.query(
+      'INSERT INTO activities (action, details) VALUES ($1, $2)',
       [
         'Add Product', 
         `เพิ่มสินค้าใหม่: ${name} (สต็อก: ${stock}, ราคา: ฿${price})`
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json({ 
-      id: result.lastID, 
+      id: newProductId, 
       message: "เพิ่มสินค้าและบันทึกกิจกรรมสำเร็จ" 
     });
   } catch (error: unknown) {

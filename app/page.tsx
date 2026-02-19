@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-// เพิ่ม Import สำหรับ Recharts
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 // --- Interfaces ---
@@ -18,8 +17,13 @@ interface Activity {
   created_at: string;
 }
 
+// 1. กำหนดคู่สีคงที่ให้ตรงกับชื่อ Action
+const COLORS_MAP: { [key: string]: string } = {
+  'Stock In': '#10b981',  // สีเขียว Emerald
+  'Stock Out': '#f43f5e', // สีแดง Rose
+};
+
 export default function InventorySystem() {
-  // --- 1. การประกาศ State ---
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [products, setProducts] = useState<Product[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -32,7 +36,6 @@ export default function InventorySystem() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [adjustmentAmount, setAdjustmentAmount] = useState(0);
 
-  // --- 2. ฟังก์ชันดึงข้อมูล ---
   const fetchProducts = async () => {
     try {
       const res = await fetch('/api/products');
@@ -61,7 +64,6 @@ export default function InventorySystem() {
     fetchactivities();
   }, []);
 
-  // --- 3. ฟังก์ชันจัดการข้อมูล (Handlers) ---
   const handleEdit = (product: Product) => {
     setEditingId(product.id);
     setFormData({ name: product.name, stock: product.stock, price: product.price });
@@ -120,7 +122,6 @@ export default function InventorySystem() {
     }
   };
 
-  // ฟังก์ชันกำหนดสีตามประเภทกิจกรรม
   const getActivityStyle = (action: string) => {
     switch (action) {
       case 'Stock In': 
@@ -138,15 +139,11 @@ export default function InventorySystem() {
     }
   };
 
-  // เตรียมข้อมูลสำหรับ Pie Chart
   const activityPieData = [
     { name: 'Stock In', value: activities.filter(a => a.action === 'Stock In').length },
     { name: 'Stock Out', value: activities.filter(a => a.action === 'Stock Out').length },
   ].filter(item => item.value > 0);
 
-  const PIE_COLORS = ['#10b981', '#f43f5e'];
-
-  // --- 4. การแสดงผล UI (Render) ---
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       <aside className="w-64 bg-white border-r border-slate-200 p-6 hidden lg:block shadow-sm">
@@ -213,47 +210,45 @@ export default function InventorySystem() {
           </div>
         )}
 
-        {/* --- Products View --- */}
         {activeTab === 'Products' && (
             <div className="max-w-5xl mx-auto space-y-8 animate-in">
               <header className="flex justify-between items-center">
                <h1 className="text-3xl font-black text-slate-800 uppercase italic">Product List</h1>
                <button onClick={() => { setEditingId(null); setFormData({name:'', stock:0, price:0}); setIsModalOpen(true); }}
                  className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg transition-transform active:scale-95 tracking-widest text-xs uppercase hover:bg-indigo-700">+ ADD ITEM</button>
-             </header>
-             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden text-sm">
-               <table className="w-full text-left">
-                 <thead className="bg-slate-50 font-black text-slate-400 uppercase tracking-widest text-[11px]">
-                   <tr>
-                     <th className="px-8 py-5">Product Name</th>
-                     <th className="px-8 py-5">Stock</th>
-                     <th className="px-8 py-5">Price</th>
-                     <th className="px-8 py-5 text-right">Action</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-slate-50">
-                   {products.map((item) => (
-                     <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                       <td className="px-8 py-5 font-bold text-slate-700">{item.name}</td>
-                       <td className={`px-8 py-5 font-mono font-bold ${item.stock < 10 ? 'text-rose-500' : 'text-slate-500'}`}>{item.stock}</td>
-                       <td className="px-8 py-5 font-bold text-indigo-600">฿{item.price.toLocaleString()}</td>
-                       <td className="px-8 py-5 text-right space-x-2">
-                         <button onClick={() => { setSelectedProduct(item); setStockType('IN'); setIsStockModalOpen(true); }} 
-                           className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg font-bold text-[10px] hover:bg-emerald-100 transition-colors uppercase tracking-widest">IN</button>
-                         <button onClick={() => { setSelectedProduct(item); setStockType('OUT'); setIsStockModalOpen(true); }} 
-                           className="bg-rose-50 text-rose-600 px-3 py-1 rounded-lg font-bold text-[10px] hover:bg-rose-100 transition-colors uppercase tracking-widest">OUT</button>
-                         <button onClick={() => handleEdit(item)} className="text-indigo-600 font-bold text-xs px-2 hover:underline transition-all">EDIT</button>
-                         <button onClick={() => handleDelete(item.id)} className="text-rose-300 hover:text-rose-600 font-bold text-xs transition-colors">DEL</button>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
+              </header>
+              <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden text-sm">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 font-black text-slate-400 uppercase tracking-widest text-[11px]">
+                    <tr>
+                      <th className="px-8 py-5">Product Name</th>
+                      <th className="px-8 py-5">Stock</th>
+                      <th className="px-8 py-5">Price</th>
+                      <th className="px-8 py-5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {products.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-5 font-bold text-slate-700">{item.name}</td>
+                        <td className={`px-8 py-5 font-mono font-bold ${item.stock < 10 ? 'text-rose-500' : 'text-slate-500'}`}>{item.stock}</td>
+                        <td className="px-8 py-5 font-bold text-indigo-600">฿{item.price.toLocaleString()}</td>
+                        <td className="px-8 py-5 text-right space-x-2">
+                          <button onClick={() => { setSelectedProduct(item); setStockType('IN'); setIsStockModalOpen(true); }} 
+                            className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg font-bold text-[10px] hover:bg-emerald-100 transition-colors uppercase tracking-widest">IN</button>
+                          <button onClick={() => { setSelectedProduct(item); setStockType('OUT'); setIsStockModalOpen(true); }} 
+                            className="bg-rose-50 text-rose-600 px-3 py-1 rounded-lg font-bold text-[10px] hover:bg-rose-100 transition-colors uppercase tracking-widest">OUT</button>
+                          <button onClick={() => handleEdit(item)} className="text-indigo-600 font-bold text-xs px-2 hover:underline transition-all">EDIT</button>
+                          <button onClick={() => handleDelete(item.id)} className="text-rose-300 hover:text-rose-600 font-bold text-xs transition-colors">DEL</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
         )}
 
-        {/* --- Reports View --- */}
         {activeTab === 'Reports' && (
           <div className="max-w-5xl mx-auto space-y-8 animate-in">
             <header className="flex justify-between items-center">
@@ -271,7 +266,6 @@ export default function InventorySystem() {
               <StatCard title="Activities" value={activities.length} color="text-amber-500" />
             </div>
 
-            {/* เพิ่มส่วน Graph Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col items-center">
                 <h2 className="text-xl font-black mb-6 text-slate-800 uppercase tracking-tight italic border-l-4 border-indigo-600 pl-4 self-start">Activity Breakdown</h2>
@@ -288,7 +282,11 @@ export default function InventorySystem() {
                         dataKey="value"
                       >
                         {activityPieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          // แก้ไข: ใช้ COLORS_MAP เพื่อให้สีตรงกับชื่อ Action เสมอ
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={COLORS_MAP[entry.name] || '#cbd5e1'} 
+                          />
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
